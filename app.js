@@ -106,19 +106,22 @@ app.get('/secrets', async function(req, res) {
       const achenejeTotalHoursThisWeek = (achenejeEntriesThisWeek || []).reduce((sum, entry) => sum + (entry.hoursWorked || 0), 0);
       
       const weeklyGoalHours = 20; // Assuming a fixed weekly goal of 20 hours
-      
-      const picksonPercentageCompletion = (picksonTotalHoursThisWeek / weeklyGoalHours) * 100;
+
+      // Calculate percentage completion (clamped to a minimum of 0)
+      const picksonPercentageCompletion = Math.max(0, (picksonTotalHoursThisWeek / weeklyGoalHours) * 100);
+      const benardPercentageCompletion = Math.max(0, (benardTotalHoursThisWeek / weeklyGoalHours) * 100);
+      const achenejePercentageCompletion = Math.max(0, (achenejeTotalHoursThisWeek / weeklyGoalHours) * 100);
+
+      // Format percentage completion and total hours
       const picksonFormattedPercentage = `width: ${picksonPercentageCompletion.toFixed(2)}%;`;
-      const picksonFormattedHours = `${picksonTotalHoursThisWeek.toString()} hrs`;
-      
-      const benardPercentageCompletion = (benardTotalHoursThisWeek / weeklyGoalHours) * 100;
       const benardFormattedPercentage = `width: ${benardPercentageCompletion.toFixed(2)}%;`;
-      const benardFormattedHours = `${benardTotalHoursThisWeek.toString()} hrs`;
-      
-      const achenejePercentageCompletion = (achenejeTotalHoursThisWeek / weeklyGoalHours) * 100;
       const achenejeFormattedPercentage = `width: ${achenejePercentageCompletion.toFixed(2)}%;`;
+
+      const picksonFormattedHours = `${picksonTotalHoursThisWeek.toString()} hrs`;
+      const benardFormattedHours = `${benardTotalHoursThisWeek.toString()} hrs`;
       const achenejeFormattedHours = `${achenejeTotalHoursThisWeek.toString()} hrs`;
-      
+
+
       res.render('secrets', {
         picksonPercentageCompletion: picksonFormattedPercentage,
         benardPercentageCompletion: benardFormattedPercentage,
