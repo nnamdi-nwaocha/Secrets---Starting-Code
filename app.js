@@ -71,6 +71,8 @@ app.get('/secrets', async function(req, res) {
   if (req.isAuthenticated()) {
     try {
       const userId = req.user.username; // Assuming 'username' holds the email address
+      const username = userId.split("@")[0]; // Extract the part before the "@" symbol
+      const userIcon = `./pictures/${username}.jpg`
       const currentDate = new Date();
       const currentDay = currentDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
       const weekStartDate = new Date(currentDate);
@@ -82,12 +84,48 @@ app.get('/secrets', async function(req, res) {
       });
 
       const totalHoursThisWeek = entriesThisWeek.reduce((sum, entry) => sum + entry.hoursWorked, 0);
-
-      const percentageCompletion = (totalHoursThisWeek / 20) * 100; // Assuming a fixed weekly goal of 20 hours
-      const formattedPercentage = `width: ${percentageCompletion.toFixed(2)}%;`;
       const formatedHours = `${totalHoursThisWeek.toString()} hrs`;
 
-      res.render('secrets', { percentageCompletion: formattedPercentage, weeklyTotal: formatedHours});
+      const picksonEntriesThisWeek = await WorkEntry.find({
+        userId: "pickson@gmail.com",
+        date: { $gte: weekStartDate.toISOString().slice(0, 10) }, // Entries on or after Monday
+      });
+      
+      const benardEntriesThisWeek = await WorkEntry.find({
+        userId: "benard@gmail.com",
+        date: { $gte: weekStartDate.toISOString().slice(0, 10) }, // Entries on or after Monday
+      });
+      
+      const achenejeEntriesThisWeek = await WorkEntry.find({
+        userId: "acheneje@gmail.com",
+        date: { $gte: weekStartDate.toISOString().slice(0, 10) }, // Entries on or after Monday
+      });
+      
+      const picksonTotalHoursThisWeek = (picksonEntriesThisWeek || []).reduce((sum, entry) => sum + (entry.hoursWorked || 0), 0);
+      const benardTotalHoursThisWeek = (benardEntriesThisWeek || []).reduce((sum, entry) => sum + (entry.hoursWorked || 0), 0);
+      const achenejeTotalHoursThisWeek = (achenejeEntriesThisWeek || []).reduce((sum, entry) => sum + (entry.hoursWorked || 0), 0);
+      
+      const weeklyGoalHours = 20; // Assuming a fixed weekly goal of 20 hours
+      
+      const picksonPercentageCompletion = (picksonTotalHoursThisWeek / weeklyGoalHours) * 100;
+      const picksonFormattedPercentage = `width: ${picksonPercentageCompletion.toFixed(2)}%;`;
+      const picksonFormattedHours = `${picksonTotalHoursThisWeek.toString()} hrs`;
+      
+      const benardPercentageCompletion = (benardTotalHoursThisWeek / weeklyGoalHours) * 100;
+      const benardFormattedPercentage = `width: ${benardPercentageCompletion.toFixed(2)}%;`;
+      const benardFormattedHours = `${benardTotalHoursThisWeek.toString()} hrs`;
+      
+      const achenejePercentageCompletion = (achenejeTotalHoursThisWeek / weeklyGoalHours) * 100;
+      const achenejeFormattedPercentage = `width: ${achenejePercentageCompletion.toFixed(2)}%;`;
+      const achenejeFormattedHours = `${achenejeTotalHoursThisWeek.toString()} hrs`;
+      
+      res.render('secrets', {
+        picksonPercentageCompletion: picksonFormattedPercentage,
+        benardPercentageCompletion: benardFormattedPercentage,
+        achenejePercentageCompletion: achenejeFormattedPercentage,
+        weeklyTotal: formatedHours, userIconString: userIcon // Use the correct variable here (e.g., picksonFormattedHours)
+      });
+      
     } catch (error) {
       console.error(error);
       res.redirect('/login');
